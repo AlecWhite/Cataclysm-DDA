@@ -1776,7 +1776,7 @@ void player::recalc_speed_bonus()
 {
     // Minus some for weight...
     int carry_penalty = 0;
-    if( weight_carried() > weight_capacity() ) {
+    if( weight_carried() > weight_capacity() && !has_trait( trait_id( "DEBUG_STORAGE" ) ) ) {
         carry_penalty = 25 * ( weight_carried() - weight_capacity() ) / ( weight_capacity() );
     }
     mod_speed_bonus( -carry_penalty );
@@ -3809,7 +3809,7 @@ void player::on_hit( Creature *source, body_part bp_hit,
 void player::on_hurt( Creature *source, bool disturb /*= true*/ )
 {
     if( has_trait( trait_ADRENALINE ) && !has_effect( effect_adrenaline ) &&
-        (hp_cur[hp_head] < 25 || hp_cur[hp_torso] < 15) ) {
+        ( hp_cur[hp_head] < 25 || hp_cur[hp_torso] < 15 ) ) {
         add_effect( effect_adrenaline, 200 );
     }
 
@@ -3819,9 +3819,9 @@ void player::on_hurt( Creature *source, bool disturb /*= true*/ )
         }
         if( !is_npc() ) {
             if( source != nullptr ) {
-                g->cancel_activity_query(_("You were attacked by %s!"), source->disp_name().c_str());
+                g->cancel_activity_query( _( "You were attacked by %s!" ), source->disp_name().c_str() );
             } else {
-                g->cancel_activity_query(_("You were hurt!"));
+                g->cancel_activity_query( _( "You were hurt!" ) );
             }
         }
     }
@@ -4019,7 +4019,7 @@ dealt_damage_instance player::deal_damage( Creature* source, body_part bp,
         }
     }
 
-    if( get_world_option<bool>( "FILTHY_WOUNDS" ) ) {
+    if( get_option<bool>( "FILTHY_WOUNDS" ) ) {
         int sum_cover = 0;
         for( const item &i : worn ) {
             if( i.covers( bp ) && i.is_filthy() ) {
@@ -4428,9 +4428,7 @@ void player::knock_back_from( const tripoint &p )
     to.y += sgn( dp.y );
 
     // First, see if we hit a monster
-    int mondex = g->mon_at( to );
-    if (mondex != -1) {
-        monster *critter = &(g->zombie(mondex));
+    if( monster * const critter = g->critter_at<monster>( to ) ) {
         deal_damage( critter, bp_torso, damage_instance( DT_BASH, critter->type->size ) );
         add_effect( effect_stunned, 1 );
         /** @EFFECT_STR_MAX allows knocked back player to knock back, damage, stun some monsters */
@@ -4449,9 +4447,7 @@ void player::knock_back_from( const tripoint &p )
         return;
     }
 
-    int npcdex = g->npc_at( to );
-    if (npcdex != -1) {
-        npc *np = g->active_npc[npcdex];
+    if( npc * const np = g->critter_at<npc>( to ) ) {
         deal_damage( np, bp_torso, damage_instance( DT_BASH, np->get_size() ) );
         add_effect( effect_stunned, 1 );
         np->deal_damage( this, bp_torso, damage_instance( DT_BASH, 3 ) );
@@ -4746,7 +4742,7 @@ void player::update_needs( int rate_multiplier )
     // No food/thirst/fatigue clock at all
     const bool debug_ls = has_trait( trait_DEBUG_LS );
     // No food/thirst, capped fatigue clock (only up to tired)
-    const bool npc_no_food = is_npc() && get_world_option<bool>( "NO_NPC_FOOD" );
+    const bool npc_no_food = is_npc() && get_option<bool>( "NO_NPC_FOOD" );
     const bool foodless = debug_ls || npc_no_food;
     const bool has_recycler = has_bionic("bio_recycler");
     const bool asleep = !sleep.is_null();
@@ -5595,9 +5591,9 @@ void player::suffer()
         }
     }
 
-    if (!in_sleep_state()) {
-        if (weight_carried() > 4 * weight_capacity()) {
-            if (has_effect( effect_downed )) {
+    if( !in_sleep_state() ) {
+        if ( !has_trait( trait_id( "DEBUG_STORAGE" ) ) && ( weight_carried() > 4 * weight_capacity() ) ) {
+            if( has_effect( effect_downed ) ) {
                 add_effect( effect_downed, 1, num_bp, false, 0, true );
             } else {
                 add_effect( effect_downed, 2, num_bp, false, 0, true );
@@ -5627,14 +5623,14 @@ void player::suffer()
                 }
             }
         }
-        if (has_trait( trait_CHEMIMBALANCE )) {
-            if (one_in(3600) && (!(has_trait( trait_NOPAIN )))) {
-                add_msg_if_player(m_bad, _("You suddenly feel sharp pain for no reason."));
-                mod_pain( 3 * rng(1, 3) );
+        if( has_trait( trait_CHEMIMBALANCE ) ) {
+            if( one_in( 3600 ) && !has_trait( trait_NOPAIN ) ) {
+                add_msg_if_player( m_bad, _( "You suddenly feel sharp pain for no reason." ) );
+                mod_pain( 3 * rng( 1, 3 ) );
             }
-            if (one_in(3600)) {
-                int pkilladd = 5 * rng(-1, 2);
-                if (pkilladd > 0) {
+            if( one_in( 3600 ) ) {
+                int pkilladd = 5 * rng( -1, 2 );
+                if( pkilladd > 0 ) {
                     add_msg_if_player(m_bad, _("You suddenly feel numb."));
                 } else if ((pkilladd < 0) && (!(has_trait( trait_NOPAIN )))) {
                     add_msg_if_player(m_bad, _("You suddenly ache."));
@@ -6058,7 +6054,7 @@ void player::suffer()
         } else if (radiation > 2000) {
             radiation = 2000;
         }
-        if( get_world_option<bool>( "RAD_MUTATION" ) && rng(100, 10000) < radiation ) {
+        if( get_option<bool>( "RAD_MUTATION" ) && rng(100, 10000) < radiation ) {
             mutate();
             radiation -= 50;
         } else if( radiation > 50 && rng(1, 3000) < radiation &&
@@ -7552,9 +7548,13 @@ item::reload_option player::select_ammo( const item& base, bool prompt ) const
         opts.push_back( base.magazine_current() );
     }
 
+    bool ammo_match_found = false;
     for( const auto e : opts ) {
         for( item_location& ammo : find_ammo( *e ) ) {
             auto id = ammo->is_ammo_container() ? ammo->contents.front().typeId() : ammo->typeId();
+            if( e->can_reload_with( id ) ) {
+                ammo_match_found = true;
+            }
             if( can_reload( *e, id ) || e->has_flag( "RELOAD_AND_SHOOT" ) ) {
                 ammo_list.emplace_back( this, e, &base, std::move( ammo ) );
             }
@@ -7565,6 +7565,8 @@ item::reload_option player::select_ammo( const item& base, bool prompt ) const
         if( !base.is_magazine() && !base.magazine_integral() && !base.magazine_current() ) {
             add_msg_if_player( m_info, _( "You need a compatible magazine to reload the %s!" ), base.tname().c_str() );
 
+        } else if ( ammo_match_found ) {
+            add_msg_if_player( m_info, _( "Nothing to reload!" ) );
         } else {
             auto name = base.ammo_data() ? base.ammo_data()->nname( 1 ) : ammo_name( base.ammo_type() );
             add_msg_if_player( m_info, _( "Out of %s!" ), name.c_str() );
@@ -10587,7 +10589,7 @@ void player::practice( const skill_id &id, int amount, int cap )
 
     bool isSavant = has_trait( trait_SAVANT );
 
-    skill_id savantSkill( NULL_ID );
+    skill_id savantSkill( skill_id::NULL_ID() );
     SkillLevel savantSkillLevel = SkillLevel();
 
     if (isSavant) {
@@ -10960,7 +10962,7 @@ tripoint player::adjacent_tile() const
             continue;
         }
         const trap &curtrap = g->m.tr_at( p );
-        if( g->mon_at( p ) == -1 && g->npc_at( p ) == -1 && g->m.passable( p ) &&
+        if( g->critter_at( p ) == nullptr && g->m.passable( p ) &&
             (curtrap.is_null() || curtrap.is_benign()) ) {
             // Only consider tile if unoccupied, passable and has no traps
             dangerous_fields = 0;
@@ -11472,7 +11474,7 @@ std::vector<Creature *> player::get_hostile_creatures( int range ) const
 void player::place_corpse()
 {
     std::vector<item *> tmp = inv_dump();
-    item body = item::make_corpse( NULL_ID, calendar::turn, name );
+    item body = item::make_corpse( mtype_id::NULL_ID(), calendar::turn, name );
     for( auto itm : tmp ) {
         g->m.add_item_or_charges( pos(), *itm );
     }

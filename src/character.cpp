@@ -856,7 +856,7 @@ int Character::weight_capacity() const
 {
     if( has_trait( trait_id( "DEBUG_STORAGE" ) ) ) {
         // Infinite enough
-        return INT_MAX >> 2;
+        return INT_MAX;
     }
     // Get base capacity from creature,
     // then apply player-only mutation and trait effects.
@@ -929,7 +929,7 @@ bool Character::can_pickWeight( const item &it, bool safe ) const
     if (!safe)
     {
         // Character can carry up to four times their maximum weight
-        return ( weight_carried() + it.weight() <= weight_capacity() * 4 );
+        return ( weight_carried() + it.weight() <= ( has_trait( trait_id( "DEBUG_STORAGE" ) ) ? INT_MAX : weight_capacity() * 4 ) );
     }
     else
     {
@@ -1990,7 +1990,7 @@ bool Character::is_immune_field( const field_id fid ) const
         case fd_relax_gas:
             return get_env_resist( bp_mouth ) >= 15;
         case fd_fungal_haze:
-            return has_trait( trait_id( "M_IMMUNE" ) ) || (get_env_resist( bp_mouth ) >= 15 &&
+            return has_trait( trait_id( "M_IMMUNE" ) ) || ( get_env_resist( bp_mouth ) >= 15 &&
                    get_env_resist( bp_eyes ) >= 15);
         case fd_electricity:
             return is_elec_immune();
@@ -2003,15 +2003,19 @@ bool Character::is_immune_field( const field_id fid ) const
                    get_armor_type( DT_ACID, bp_foot_l ) >= 5 &&
                    get_armor_type( DT_ACID, bp_foot_r ) >= 5 &&
                    get_armor_type( DT_ACID, bp_leg_l ) >= 5 &&
-                   get_armor_type( DT_ACID, bp_leg_r ) >= 5);
+                   get_armor_type( DT_ACID, bp_leg_r ) >= 5 );
         case fd_web:
             return has_trait( trait_id( "WEB_WALKER" ) );
+        case fd_fire:
+        case fd_flame_burst: 
+            return has_trait( trait_id( "M_SKIN2" ) ) || has_active_bionic( "bio_heatsink" ) ||
+                   is_wearing( "rm13_armor_on" );
         default:
             // Suppress warning
             break;
     }
     // If we haven't found immunity yet fall up to the next level
-    return Creature::is_immune_field(fid);
+    return Creature::is_immune_field( fid );
 }
 
 int Character::throw_range( const item &it ) const

@@ -287,13 +287,18 @@ class game
         void scrambler_blast( const tripoint &p );
         /** Triggers an emp blast at p. */
         void emp_blast( const tripoint &p );
-        /** Returns the NPC index of the npc at p. Returns -1 if no NPC is present. */
-        int  npc_at( const tripoint &p ) const;
         /** Returns the NPC index of the npc with a matching ID. Returns -1 if no NPC is present. */
-        int  npc_by_id(const int id) const;
-        /** Returns the Creature at tripoint p */
-        Creature *critter_at( const tripoint &p, bool allow_hallucination = false );
-        Creature const* critter_at( const tripoint &p, bool allow_hallucination = false ) const;
+        npc *npc_by_id(const int id) const;
+        /**
+         * Returns the Creature at the given location. Optionally casted to the given
+         * type of creature: @ref npc, @ref player, @ref monster - if there is a creature,
+         * but it's not of the requested tpye, returns nullptr.
+         * @param allow_hallucination Whether to return monsters that are actually hallucinations.
+         */
+        template<typename T = Creature>
+        T *critter_at( const tripoint &p, bool allow_hallucination = false );
+        template<typename T = Creature>
+        T const* critter_at( const tripoint &p, bool allow_hallucination = false ) const;
 
         /** Summons a brand new monster at the current time. Returns the summoned monster. */
         bool summon_mon( const mtype_id& id, const tripoint &p );
@@ -391,8 +396,6 @@ class game
         void unload_npcs();
         /** Unloads, then loads the NPCs */
         void reload_npcs();
-        /** Pulls the NPCs that were dumped into the world map on save back into mission_npcs */
-        void load_mission_npcs();
         /** Returns the number of kills of the given mon_id by the player. */
         int kill_count( const mtype_id& id );
         /** Increments the number of kills of the given mtype_id by the player upwards. */
@@ -520,7 +523,6 @@ class game
         std::vector<npc *> allies();
 
         std::vector<npc *> active_npc;
-        std::vector<npc *> mission_npc;
         std::vector<faction> factions;
         int weight_dragged; // Computed once, when you start dragging
 
