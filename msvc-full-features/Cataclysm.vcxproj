@@ -107,12 +107,15 @@
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
       <MinimalRebuild>true</MinimalRebuild>
       <AdditionalOptions>/bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>E:\Mods and Modding\CDDA\Source\Cataclysm-DDA\WinDepend\SDL2-2.0.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <AdditionalOptions>/LTCG:OFF %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>"E:\Mods and Modding\CDDA\Source\Cataclysm-DDA\WinDepend\SDL2-2.0.5\lib\x86\SDL2.lib";%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>E:\Mods and Modding\CDDA\Source\Cataclysm-DDA\WinDepend\SDL2-2.0.5\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>prebuild.cmd</Command>
@@ -164,6 +167,7 @@
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
       <AdditionalOptions>/bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MinimalRebuild>true</MinimalRebuild>
+      <AdditionalIncludeDirectories>E:\Mods and Modding\CDDA\Source\Cataclysm-DDA\WinDepend\SDL2-2.0.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -172,6 +176,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <AdditionalOptions>/LTCG:OFF %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>"E:\Mods and Modding\CDDA\Source\Cataclysm-DDA\WinDepend\SDL2-2.0.5\lib\x86\SDL2.lib";%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>E:\Mods and Modding\CDDA\Source\Cataclysm-DDA\WinDepend\SDL2-2.0.5\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>prebuild.cmd</Command>
