@@ -30,6 +30,8 @@
 #include "sounds.h"
 #include "cata_utility.h"
 #include "string_input_popup.h"
+#include "monster.h"
+#include "calendar.h"
 
 #include <sstream>
 #include <algorithm>
@@ -2778,6 +2780,24 @@ void iexamine::water_source(player &p, const tripoint &examp)
     item water = g->m.water_from( examp );
     (void) p; // TODO: use me
     g->handle_liquid( water, nullptr, 0, &examp );
+}
+
+void iexamine::milk_source( monster *source_mon )
+{
+    // Creates the milk item based on milk charges left
+    item milk( "milk", 0, source_mon->milk_left );
+    if( source_mon->turn_next_milking < calendar::turn ) {
+        // Recharge the milk of the creature
+        source_mon->milk_left = 4;
+        g->handle_liquid( milk, nullptr, 0, nullptr, nullptr, source_mon );
+        add_msg( _( "You milk the %s." ), source_mon->disp_name().c_str() );
+        source_mon->turn_next_milking = calendar::turn.get_turn() + HOURS( 24 );
+    } else if( source_mon->milk_left > 0 ) {
+        g->handle_liquid( milk, nullptr, 0, nullptr, nullptr, source_mon );
+        add_msg( _( "You milk the %s." ), source_mon->disp_name().c_str() );
+    } else {
+        add_msg( _( "The %s's udders run dry" ), source_mon->disp_name().c_str() );
+    }
 }
 
 const itype * furn_t::crafting_pseudo_item_type() const
